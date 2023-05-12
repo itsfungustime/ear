@@ -46,7 +46,7 @@ def sms_reply():
         # Filter predictions based on confidence threshold
         filtered_result = [(name, confidence) for name, confidence in prediction_result if confidence >= confidence_threshold]
 
-        warning_message = "Always consult a doctor. This service isn't intended for diagnosis."
+        warning_message = "Always consult a doctor. Not intended for diagnosis."
         mapped_result = [(display_name_mapping[name], confidence) for name, confidence in filtered_result]
         formatted_predictions = ', '.join([f"{name} ({confidence * 100:.0f}%)" for name, confidence in mapped_result])
 
