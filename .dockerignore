@@ -1,0 +1,13 @@
+.bash_history
+.Trash
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+*.egg
+*.log
+*.sqlite
+.lesshst
