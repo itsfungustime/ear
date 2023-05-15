@@ -4,7 +4,8 @@ from google.cloud.aiplatform.gapic.schema import predict
 
 def predict_image_classification_sample(
     project: str,
-    endpoint_id: str,
+    ear_endpoint_id: str,
+    problem_endpoint_id: str,
     filename: str,
     location: str = "us-central1",
     api_endpoint: str = "us-central1-aiplatform.googleapis.com",
@@ -15,34 +16,64 @@ def predict_image_classification_sample(
         file_content = f.read()
 
     encoded_content = base64.b64encode(file_content).decode("utf-8")
-    instance = predict.instance.ImageClassificationPredictionInstance(
+
+    ear_instance = predict.instance.ImageClassificationPredictionInstance(
         content=encoded_content,
     ).to_value()
-    instances = [instance]
-    parameters = predict.params.ImageClassificationPredictionParams(
+    ear_instances = [ear_instance]
+
+    problem_instance = predict.instance.ImageClassificationPredictionInstance(
+        content=encoded_content,
+    ).to_value()
+    problem_instances = [problem_instance]
+
+    ear_parameters = predict.params.ImageClassificationPredictionParams(
         confidence_threshold=0.2, max_predictions=5,
     ).to_value()
-    endpoint = client.endpoint_path(
-        project=project, location=location, endpoint=endpoint_id
+
+    problem_parameters = predict.params.ImageClassificationPredictionParams(
+        confidence_threshold=0.2, max_predictions=5,
+    ).to_value()
+
+    ear_endpoint = client.endpoint_path(
+        project=project, location=location, endpoint=ear_endpoint_id
     )
-    response = client.predict(
-        endpoint=endpoint, instances=instances, parameters=parameters
+    problem_endpoint = client.endpoint_path(
+        project=project, location=location, endpoint=problem_endpoint_id
     )
 
-    predictions = response.predictions
-    prediction_results = []
+    ear_response = client.predict(
+        endpoint=ear_endpoint, instances=ear_instances, parameters=ear_parameters
+    )
+    problem_response = client.predict(
+        endpoint=problem_endpoint, instances=problem_instances, parameters=problem_parameters
+    )
 
-    for prediction in predictions:
-        for display_name, confidence in zip(prediction["displayNames"], prediction["confidences"]):
-            prediction_results.append((display_name, confidence))
+    ear_predictions = ear_response.predictions
+    problem_predictions = problem_response.predictions
 
-    return prediction_results
+    ear_prediction_results = []
+    problem_prediction_results = []
+
+    for ear_prediction in ear_predictions:
+        for display_name, confidence in zip(ear_prediction["displayNames"], ear_prediction["confidences"]):
+            ear_prediction_results.append((display_name, confidence))
+
+    for problem_prediction in problem_predictions:
+        for display_name, confidence in zip(problem_prediction["displayNames"], problem_prediction["confidences"]):
+            problem_prediction_results.append((display_name, confidence))
+
+    return ear_prediction_results, problem_prediction_results
 
 if __name__ == "__main__":
     project = "280882700549"
-    endpoint_id = "2896496257608450048"
+    ear_endpoint_id = "7859322309482381312"
+    problem_endpoint_id = "2896496257608450048"
     location = "us-central1"
     filename = "ear.png"
 
-    prediction_results = predict_image_classification_sample(project, endpoint_id, filename, location)
-    print(prediction_results)
+    ear_prediction_results, problem_prediction_results = predict_image_classification_sample(
+        project, ear_endpoint_id, problem_endpoint_id, filename, location
+    )
+    print("Ear predictions:", ear_prediction_results)
+    print("Problem predictions:", problem_prediction_results)
